@@ -1,7 +1,14 @@
 'use strict';
 
 const express = require('express');
-const admin = require('firebase-admin');
+const {
+  applicationDefault,
+  cert,
+  getApps,
+  initializeApp,
+} = require('firebase-admin/app');
+const { getAuth } = require('firebase-admin/auth');
+const { FieldValue, getFirestore } = require('firebase-admin/firestore');
 
 const PORT = Number(process.env.PORT || 8787);
 const PROJECT_ID = process.env.FIREBASE_PROJECT_ID;
@@ -15,15 +22,16 @@ if (!PROJECT_ID || !ONESIGNAL_APP_ID || !ONESIGNAL_REST_API_KEY) {
   );
 }
 
-if (!admin.apps.length) {
+if (getApps().length === 0) {
   const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
   const credential = serviceAccountJson
-    ? admin.credential.cert(JSON.parse(serviceAccountJson))
-    : admin.credential.applicationDefault();
-  admin.initializeApp({ credential, projectId: PROJECT_ID });
+    ? cert(JSON.parse(serviceAccountJson))
+    : applicationDefault();
+  initializeApp({ credential, projectId: PROJECT_ID });
 }
 
-const db = admin.firestore();
+const auth = getAuth();
+const db = getFirestore();
 const app = express();
 app.disable('x-powered-by');
 app.use(express.json({ limit: '32kb' }));
@@ -54,7 +62,7 @@ async function requireFirebaseUser(req, res, next) {
   if (!match) return res.status(401).json({ error: 'Sign in required.' });
 
   try {
-    const decoded = await admin.auth().verifyIdToken(match[1]);
+    const decoded = await auth.verifyIdToken(match[1]);
     if (decoded.email_verified !== true) {
       return res.status(403).json({ error: 'Verified account required.' });
     }
@@ -195,7 +203,7 @@ app.post('/api/push/notifications', requireFirebaseUser, async (req, res) => {
         const batch = db.batch();
         for (const item of group.items) {
           batch.update(db.collection('notifications').doc(item.id), {
-            pushSentAt: admin.firestore.FieldValue.serverTimestamp(),
+            pushSentAt: FieldValue.serverTimestamp(),
           });
         }
         await batch.commit();
