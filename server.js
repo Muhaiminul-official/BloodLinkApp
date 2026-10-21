@@ -12,8 +12,8 @@ const { FieldValue, getFirestore } = require('firebase-admin/firestore');
 
 const PORT = Number(process.env.PORT || 8787);
 const PROJECT_ID = process.env.FIREBASE_PROJECT_ID;
-const ONESIGNAL_APP_ID = "7b905dae-cf70-4e38-a3ff-3ad50af79e73";
-const ONESIGNAL_REST_API_KEY = "os_v2_app_poif3lwpobhdri77hlkqv546onwlx3g7nkoukauaqd42swufaptety3wppejpdvs3iik6p4sp2gdrncql3djdlhcky4hckdcylfwlii";
+const ONESIGNAL_APP_ID = process.env.ONESIGNAL_APP_ID;
+const ONESIGNAL_REST_API_KEY = process.env.ONESIGNAL_REST_API_KEY;
 const MAX_NOTIFICATION_IDS = 100;
 
 if (!PROJECT_ID || !ONESIGNAL_APP_ID || !ONESIGNAL_REST_API_KEY) {
